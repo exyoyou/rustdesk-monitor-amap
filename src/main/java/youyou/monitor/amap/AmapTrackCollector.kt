@@ -1,7 +1,7 @@
 package youyou.monitor.amap
 
 import android.content.Context
-import android.util.Log
+import youyou.monitor.logger.Log
 import com.amap.api.location.AMapLocation
 import com.amap.api.location.AMapLocationClient
 import com.amap.api.location.AMapLocationClientOption
@@ -67,6 +67,7 @@ class AmapTrackCollector(
             }
             currentIntervalMs = initialInterval
             lastPoint = null
+            Log.i(TAG, "启动参数: $options, initialInterval=${initialInterval}ms")
 
             val client = AMapLocationClient(context.applicationContext)
             client.setLocationOption(buildLocationOption(initialInterval, options))
@@ -103,10 +104,18 @@ class AmapTrackCollector(
                     } else {
                         activeOptions.staticIntervalMs.coerceAtLeast(2000L)
                     }
+                    Log.d(
+                        TAG,
+                        "轨迹状态: moving=$moving, targetInterval=${targetInterval}ms, currentInterval=${currentIntervalMs}ms"
+                    )
                     updateIntervalIfNeeded(client, targetInterval)
                 }
 
                 lastPoint = point
+                Log.d(
+                    TAG,
+                    "采样点: lat=${point.latitude}, lon=${point.longitude}, acc=${point.accuracyMeters}, ts=${point.timestampMs}"
+                )
                 onPoint(point)
             }
 
