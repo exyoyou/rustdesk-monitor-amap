@@ -3,12 +3,25 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// 高德 Key：优先环境变量 AMAP_API_KEY，其次 flutter/android/local.properties 的 amap.api.key；
+// 通过 BuildConfig 在运行时设置，不依赖宿主 app 的 manifestPlaceholders
+def amapApiKey = System.getenv('AMAP_API_KEY')
+if (amapApiKey == null || amapApiKey.trim().isEmpty()) {
+    def localProps = new Properties()
+    def localPropsFile = rootProject.file('local.properties')
+    if (localPropsFile.exists()) {
+        localPropsFile.withReader('UTF-8') { localProps.load(it) }
+    }
+    amapApiKey = localProps.getProperty('amap.api.key', '')
+}
+
 android {
     namespace 'youyou.monitor.amap'
     compileSdk 34
 
     defaultConfig {
-        minSdk 26
+        minSdk 22
+        buildConfigField "String", "AMAP_API_KEY", "\"${amapApiKey.trim()}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
@@ -26,6 +39,9 @@ android {
     }
     kotlinOptions {
         jvmTarget = '17'
+    }
+    buildFeatures {
+        buildConfig true
     }
 }
 
