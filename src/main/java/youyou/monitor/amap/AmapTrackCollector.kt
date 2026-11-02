@@ -75,6 +75,12 @@ class AmapTrackCollector(
         try {
             AMapLocationClient.updatePrivacyShow(context, true, true)
             AMapLocationClient.updatePrivacyAgree(context, true)
+            // Key 在运行时设置（来自 BuildConfig），必须在创建定位客户端之前
+            if (BuildConfig.AMAP_API_KEY.isNotBlank()) {
+                AMapLocationClient.setApiKey(BuildConfig.AMAP_API_KEY)
+            } else {
+                Log.w(TAG, "未配置高德 Key（AMAP_API_KEY 或 local.properties 的 amap.api.key）")
+            }
 
             activeOptions = options
             val initialInterval = if (options.adaptiveInterval) {
