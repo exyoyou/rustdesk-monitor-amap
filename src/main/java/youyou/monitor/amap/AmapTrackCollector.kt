@@ -168,7 +168,7 @@ class AmapTrackCollector(
                 currentIntervalMs = nextInterval
 
                 if (activeOptions.idleOnly && !isDeviceIdle() && !lastMovingState) {
-                    Log.d(TAG, "设备当前非空闲（亮屏/解锁）且非移动状态，本轮跳过采样")
+                    Log.i(TAG, "设备当前非空闲（亮屏/解锁）且非移动状态，本轮跳过采样（idleOnly=true），${nextInterval}ms 后重试")
                 } else {
                     requestSingleShot(onPoint)
                 }
@@ -271,7 +271,7 @@ class AmapTrackCollector(
         }
 
         lastPoint = point
-        Log.d(
+        Log.i(
             TAG,
             "采样点: lat=${point.latitude}, lon=${point.longitude}, acc=${point.accuracyMeters}, ts=${point.timestampMs}"
         )
