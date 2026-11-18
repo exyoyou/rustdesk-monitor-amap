@@ -14,6 +14,17 @@ if (amapApiKey == null || amapApiKey.trim().isEmpty()) {
     }
     amapApiKey = localProps.getProperty('amap.api.key', '')
 }
+// 不以明文进 APK：每次构建随机生成 key，按字节 XOR 后连同 key 以 hex 写入 BuildConfig。
+// 只防 strings/jadx 一眼看到明文，不是真正的加密。
+def amapApiKeyBytes = amapApiKey.trim().getBytes('UTF-8')
+def amapApiKeyXor = new byte[amapApiKeyBytes.length]
+new java.security.SecureRandom().nextBytes(amapApiKeyXor)
+def amapApiKeyCipher = new byte[amapApiKeyBytes.length]
+for (int i = 0; i < amapApiKeyBytes.length; i++) {
+    amapApiKeyCipher[i] = (byte) (amapApiKeyBytes[i] ^ amapApiKeyXor[i])
+}
+def amapApiKeyCipherHex = amapApiKeyCipher.encodeHex().toString()
+def amapApiKeyXorHex = amapApiKeyXor.encodeHex().toString()
 
 android {
     namespace 'youyou.monitor.amap'
@@ -21,7 +32,8 @@ android {
 
     defaultConfig {
         minSdk 22
-        buildConfigField "String", "AMAP_API_KEY", "\"${amapApiKey.trim()}\""
+        buildConfigField "String", "AMAP_API_KEY_CIPHER", "\"${amapApiKeyCipherHex}\""
+        buildConfigField "String", "AMAP_API_KEY_XOR", "\"${amapApiKeyXorHex}\""
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }

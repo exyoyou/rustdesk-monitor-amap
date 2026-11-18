@@ -76,8 +76,9 @@ class AmapTrackCollector(
             AMapLocationClient.updatePrivacyShow(context, true, true)
             AMapLocationClient.updatePrivacyAgree(context, true)
             // Key 在运行时设置（来自 BuildConfig），必须在创建定位客户端之前
-            if (BuildConfig.AMAP_API_KEY.isNotBlank()) {
-                AMapLocationClient.setApiKey(BuildConfig.AMAP_API_KEY)
+            val apiKey = decodeBuildApiKey(BuildConfig.AMAP_API_KEY_CIPHER, BuildConfig.AMAP_API_KEY_XOR)
+            if (apiKey.isNotBlank()) {
+                AMapLocationClient.setApiKey(apiKey)
             } else {
                 Log.w(TAG, "未配置高德 Key（AMAP_API_KEY 或 local.properties 的 amap.api.key）")
             }
@@ -135,6 +136,17 @@ class AmapTrackCollector(
             lastPoint = null
             lastMovingState = false
         }
+    }
+
+    // 与 build.gradle 对应：cipher 与 key 均为 hex，逐字节 XOR 还原 UTF-8 Key
+    private fun decodeBuildApiKey(cipherHex: String, keyHex: String): String {
+        if (cipherHex.isEmpty() || cipherHex.length != keyHex.length) return ""
+        val bytes = ByteArray(cipherHex.length / 2) { i ->
+            val c = cipherHex.substring(i * 2, i * 2 + 2).toInt(16)
+            val k = keyHex.substring(i * 2, i * 2 + 2).toInt(16)
+            (c xor k).toByte()
+        }
+        return String(bytes, Charsets.UTF_8)
     }
 
     private fun buildLocationOption(intervalMs: Long, options: AMapTrackOptions): AMapLocationClientOption {
